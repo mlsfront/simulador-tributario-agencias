@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulador Tributário e de Custos - Agência Web (CNAE 6201-5/02)</title>
+  <style>
+    :root {
+      --bg: #0b0f13;
+      --card: #141a21;
+      --muted: #8ea0b5;
+      --text: #eaf0f7;
+      --accent: #4cc9f0;
+      --accent-2: #80ffdb;
+      --danger: #ff6b6b;
+      --ok: #51cf66;
+      --warning: #ffd43b;
+      --border: #243140;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+    }
+
+    header {
+      padding: 24px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(76, 201, 240, .08), transparent 60%);
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 22px
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted)
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .span-12 {
+      grid-column: span 12
+    }
+
+    .span-8 {
+      grid-column: span 8
+    }
+
+    .span-6 {
+      grid-column: span 6
+    }
+
+    .span-4 {
+      grid-column: span 4
+    }
+
+    .span-3 {
+      grid-column: span 3
+    }
+
+    .span-2 {
+      grid-column: span 2
+    }
+
+    @media (max-width: 980px) {
+
+      .span-8,
+      .span-6,
+      .span-4,
+      .span-3,
+      .span-2 {
+        grid-column: span 12
+      }
+    }
+
+    .mb-4 {
+      margin-bottom: 14px;
+      ;
+    }
+
+    .mt-4 {
+      margin-top: 14px;
+      ;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 18px
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-bottom: 8px
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    @media (max-width:700px) {
+      .row {
+        grid-template-columns: 1fr
+      }
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f141a;
+      color: var(--text);
+      outline: none;
+      transition: border .2s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent)
+    }
+
+    .inline {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch input {
+      appearance: none;
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      position: relative;
+      background: #22303f;
+      transition: all .2s
+    }
+
+    .switch input:checked {
+      background: var(--accent)
+    }
+
+    .switch input::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px;
+      left: 3px;
+      transition: left .2s;
+    }
+
+    .switch input:checked::after {
+      left: 23px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px;
+      text-align: left
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700
+    }
+
+    .total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+      margin-top: 8px;
+    }
+
+    .total .label {
+      color: var(--muted)
+    }
+
+    .total .value {
+      font-weight: 700
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.ok {
+      background: rgba(81, 207, 102, .12);
+      color: var(--ok)
+    }
+
+    .pill.warn {
+      background: rgba(255, 212, 59, .12);
+      color: var(--warning)
+    }
+
+    .pill.danger {
+      background: rgba(255, 107, 107, .12);
+      color: var(--danger)
+    }
+
+    .help {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f141a;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: transparent;
+      color: #001219;
+      font-weight: 700
+    }
+
+    .btn.small {
+      padding: 6px 10px;
+      font-size: 13px
+    }
+
+    .flex {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .note {
+      background: #0f141a;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--muted)
+    }
+
+    .footnote {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px
+    }
+
+    .right {
+      text-align: right
+    }
+
+    /* Modal / Dialog */
+    dialog {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 800px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+    }
+
+    dialog h2 {
+      margin-top: 0;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    /* Details / Summary */
+    details {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      transition: all 0.3s;
+    }
+
+    details[open] {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .rev-history {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .rev-history div label {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Simulador tributário e de custos • Agência Web (CNAE 6201-5/02)</h1>
+    <p>Configure livremente alíquotas,
+      tabelas e percentuais. Cálculo automático e máscaras brasileiras.</p>
+  </header>
+  <div class="container">
+    <!-- 🔘 Botões de controle de dados -->
+    <div class="card span-12 mb-4">
+      <div class="section-title">
+        <h2>Gerenciar dados do simulador</h2>
+      </div>
+      <div class="flex" style="margin-top:10px; gap:12px; flex-wrap:wrap">
+        <!-- Botão para download dos dados em JSON --><button class="btn primary" id="btnDownload">⬇️ Exportar
+          JSON</button>
+        <!-- Botão para upload de dados em JSON --><label class="btn" style="cursor:pointer">⬆️ Importar JSON
+          <input type="file" id="btnUpload" accept=".json" style="display:none"></label>
+        <!-- Botão para Configurações Avançadas --><button class="btn" id="btnOpenSettings">⚙️ Configurações
+          Globais</button>
+        <!-- Botão para limpar dados do localStorage --><button class="btn" id="btnUndo">⟲ Desfazer</button>
+        <!-- Botão para limpar dados do localStorage --><button class="btn danger" id="btnClear">🗑️ Limpar
+          tudo</button>
+      </div>
+      <p class="footnote">Exportar baixa um arquivo JSON com seu estado atual. Configurações Globais permite editar
+        todas as tabelas de uma vez.</p>
+    </div>
+    <div class="grid">
+      <!-- Receita e Fator R -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Receita e fator R</h2><span class="badge">Migração automática III ↔ V</span>
+        </div>
+        <div class="row">
+          <div><label>Receita mensal (Mês Atual)</label><input type="text" id="receitaMensal" data-mask="currency"
+              value="R$ 18.000,00">
+            <div class="help">Base para DAS mensal</div>
+          </div>
+          <div><label>Receita acumulada 12 meses (RBT12)</label><input type="text" id="rbt12" data-mask="currency"
+              value="R$ 600.000,00" readonly style="background:rgba(255,255,255,0.05); cursor:not-allowed">
+            <div class="help">Calculado automaticamente abaixo</div>
+          </div>
+        </div>
+        <details class="mb-4" id="detailsRevenue">
+          <summary>Ver/Editar Histórico de 12 Meses</summary>
+          <div class="rev-history" id="revenueHistoryGrid">
+            <!-- Gerado via JS: 12 meses de inputs -->
+          </div>
+        </details>
+        <div class="row">
+          <div><label>Massa Salarial Acumulada 12 meses</label><input type="text" id="folha12" data-mask="currency"
+              value="R$ 180.000,00" readonly style="background:rgba(255,255,255,0.05); cursor:not-allowed">
+            <details class="mt-4">
+              <summary>Informações detalhadas</summary>
+              <div class="help">A massa salarial abrange salários (CLT), 13º, férias, pró-labore, INSS patronal (CPP) e
+                FGTS. Estão excluídos: CT (contratos Civis), INSS retido do sócio (11%) e IRPF.</div>
+            </details>
+          </div>
+          <div><label>Limiar Fator R (%) para Anexo III</label><input type="text" id="limiarFatorR" data-mask="percent"
+              value="28,00%"></div>
+        </div>
+        <div class="total"><span class="label">Fator R</span><strong id="fatorR" class="value">31,
+            00%</strong></div>
+        <div class="total"><span class="label">Anexo aplicado</span><strong id="anexoAplicado" class="value"><span
+              class="pill ok">III</span></strong></div>
+      </div>
+      <!-- Simples Nacional -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Simples Nacional (DAS)</h2><label class="switch"><input type="checkbox"
+              id="modoAvancadoSimples"><span>Usar tabela progressiva (avançado)</span></label>
+        </div>
+        <!-- Modo simples: alíquota direta -->
+        <div id="simplesBasico">
+          <div class="row">
+            <div><label>DAS Anexo III (alíquota mensal)</label><input type="text" id="aliquotaIII" data-mask="percent"
+                value="6,00%"></div>
+            <div><label>DAS Anexo V (alíquota mensal)</label><input type="text" id="aliquotaV" data-mask="percent"
+                value="12,00%"></div>
+          </div>
+          <div class="total"><span class="label">DAS calculado (mensal)</span><strong id="dasMensal" class="value">R$
+              3.000,
+              00</strong></div>
+        </div>
+        <!-- Modo avançado: tabela progressiva -->
+        <div id="simplesAvancado" style="display:none">
+          <p class="note">Edite as faixas,
+            alíquotas nominais e parcelas a deduzir para o ano vigente. O cálculo aplica a alíquota efetiva:
+            (RBT12 × alíquota − PD) ÷ RBT12.</p>
+          <div class="inline"><button class="btn small" id="preencherTabelaPadrao">Carregar valores-padrão
+              (editar depois)</button><span class="help">Confira os valores oficiais antes de usar.</span>
+          </div>
+          <div class="row">
+            <div><label>Tabela Anexo III</label>
+              <table id="tabelaIII">
+                <thead>
+                  <tr>
+                    <th>Faixa RBT12</th>
+                    <th>Alíquota</th>
+                    <th>Parcela a deduzir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Linhas geradas via JS -->
+                </tbody>
+              </table>
+            </div>
+            <div><label>Tabela Anexo V</label>
+              <table id="tabelaV">
+                <thead>
+                  <tr>
+                    <th>Faixa RBT12</th>
+                    <th>Alíquota</th>
+                    <th>Parcela a deduzir</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="total"><span class="label">Alíquota efetiva do anexo aplicado</span><strong id="aliquotaEfetiva"
+              class="value">—</strong></div>
+          <div class="total"><span class="label">DAS calculado (mensal, avançado)</span><strong id="dasMensalAvancado"
+              class="value">—</strong></div>
+        </div>
+      </div>
+      <!-- Sócio (Pro-labore) -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Pro-labore do sócio</h2><span class="badge">INSS e IRPF editáveis</span>
+        </div>
+        <div class="row">
+          <div><label>Pro-labore mensal</label><input type="text" id="prolabore" data-mask="currency"
+              value="R$ 3.000,00"></div>
+          <div><label>Teto INSS mensal (editável)</label><input type="text" id="tetoINSS" data-mask="currency"
+              value="R$ 7.500,00"></div>
+        </div>
+        <div class="row">
+          <div><label>INSS empregado (%)</label><input type="text" id="inssEmpregado" data-mask="percent"
+              value="11,00%">
+            <div class="help">Aplica até o teto,
+              sem salário-família</div>
+          </div>
+          <div><label>INSS patronal sobre pro-labore (%)</label><input type="text" id="inssPatronalProlabore"
+              data-mask="percent" value="20,00%">
+            <div class="help">Edite conforme regime aplicável</div>
+          </div>
+        </div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer">Configurar IRPF progressivo</summary>
+          <div class="footnote">Edite faixas,
+            alíquota e parcela a deduzir. O cálculo aplica tabela mensal.</div>
+          <table id="tabelaIRPF">
+            <thead>
+              <tr>
+                <th>Até (R$)</th>
+                <th>Alíquota</th>
+                <th>Parcela a deduzir</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Gerado via JS -->
+            </tbody>
+          </table>
+        </details>
+        <div class="total"><span class="label">INSS do sócio (CPF)</span><strong id="inssSocio" class="value">R$ 467,
+            50</strong></div>
+        <div class="total"><span class="label">IRPF do sócio (CPF)</span><strong id="irpfSocio" class="value">R$ 188,
+            29</strong></div>
+        <div class="total"><span class="label">Custo patronal (Empresa)</span><strong id="custoPatronalProlabore"
+            class="value">R$ 1.000, 00</strong></div>
+        <div class="total highlight"><span class="label">Custo total do sócio</span><strong id="custoSocioTotal"
+            class="value">R$ 6.000, 00</strong></div>
+      </div>
+      <!-- Funcionários CLT -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Funcionários CLT</h2><button class="btn small" id="adicionarFuncionario">Adicionar
+            funcionário</button>
+        </div>
+        <div id="listaFuncionarios"></div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer">Encargos padrão (editar)</summary>
+          <div class="row">
+            <div><label>FGTS (%)</label><input type="text" id="fgts" data-mask="percent" value="8,00%"></div>
+            <div><label>Provisão multa FGTS (%)</label><input type="text" id="fgtsMulta" data-mask="percent"
+                value="3,20%"></div>
+          </div>
+          <div class="row">
+            <div><label>13º salário (provisão mensal)</label><input type="text" id="decimoTerceiro" data-mask="percent"
+                value="8,33%"></div>
+            <div><label>Férias+1/3 (provisão mensal)</label><input type="text" id="ferias" data-mask="percent"
+                value="11,11%"></div>
+          </div>
+          <div class="row">
+            <div><label>INSS patronal (%)</label><input type="text" id="inssPatronalCLT" data-mask="percent"
+                value="0,00%">
+              <div class="help">Edite conforme regime (Simples pode substituir CPP)</div>
+            </div>
+            <div><label>RAT (%)</label><input type="text" id="rat" data-mask="percent" value="0,00%">
+              <div class="help">Risco ambiental do trabalho (se aplicável)</div>
+            </div>
+          </div>
+        </details>
+        <div class="total"><span class="label">Custo total CLT (mensal)</span><strong id="custoCLTTotal"
+            class="value">R$ 0,
+            00</strong></div>
+      </div>
+      <!-- Prestadores CT -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Prestadores CT (PJ/Autônomos)</h2><button class="btn small" id="adicionarCT">Adicionar
+            contrato</button>
+        </div>
+        <div id="listaCT"></div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer">Retenções e ISS (editar)</summary>
+          <div class="row">
+            <div><label>ISS (%)</label><input type="text" id="iss" data-mask="percent" value="3,00%"></div>
+            <div><label>Outras retenções (%)</label><input type="text" id="retencoes" data-mask="percent" value="0,00%">
+            </div>
+          </div>
+          <div class="footnote">Use conforme município/contrato (opcional). Pode zerar.</div>
+        </details>
+        <div class="total"><span class="label">Custo total CT (Mensal + ISS)</span><strong id="custoCTTotal"
+            class="value">R$ 0, 00</strong></div>
+      </div>
+      <!-- Custos Variáveis -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Plugins / Licenças / Outros</h2><button class="btn small" id="adicionarVariacel">Adicionar
+            custo</button>
+        </div>
+        <div id="listaVariaveis"></div>
+        <div class="total"><span class="label">Total variáveis (mensal)</span><strong id="custoVariavelTotal"
+            class="value">R$ 0, 00</strong></div>
+        <div class="total"><span class="label">% em relação à Receita</span><strong id="percVariavel"
+            class="value">0,00%</strong></div>
+      </div>
+      <!-- Consolidação -->
+      <div class="card span-12">
+        <div class="section-title">
+          <h2>Consolidação e carga tributária</h2><button class="btn" id="resetar">Resetar
+            valores-padrão</button>
+        </div>
+        <div class="row">
+          <div class="card">
+            <h2>Resumo tributário</h2>
+            <div class="total"><span class="label">DAS</span><strong id="outDAS" class="value">R$ 0,
+                00</strong></div>
+            <div class="total"><span class="label">INSS do sócio</span><strong id="outINSSSocio" class="value">R$ 0,
+                00</strong></div>
+            <div class="total"><span class="label">IRPF do sócio</span><strong id="outIRPF" class="value">R$ 0,
+                00</strong></div>
+            <div class="total"><span class="label">Encargos CLT</span><strong id="outCLT" class="value">R$
+                0,
+                00</strong></div>
+            <div class="total"><span class="label">Retenções CT</span><strong id="outCT" class="value">R$
+                0,
+                00</strong></div>
+            <div class="total"><span class="label">Carga tributária total</span><strong id="cargaTotal" class="value">R$
+                0,
+                00</strong></div>
+          </div>
+          <div class="card">
+            <h2>Indicadores e Despesas</h2>
+            <div class="total"><span class="label">Carga tributária</span><strong id="indCarga" class="value">—</strong>
+            </div>
+            <div class="total"><span class="label">Custo operação (Pessoas)</span><strong id="indCustoOp"
+                class="value">—</strong></div>
+            <div class="total"><span class="label">Custos variáveis</span><strong id="indVariaveis"
+                class="value">—</strong></div>
+            <div class="total highlight"
+              style="background:rgba(76,201,240,0.1); border-color:var(--accent); border-style:solid"><span
+                class="label">TOTAL DE DESPESAS</span><strong id="indTotalDespesas" class="value">—</strong></div>
+            <div class="total"><span class="label">Fator R atual</span><strong id="pillFR" class="value"><span
+                  class="pill ok">≥ limiar</span></strong></div>
+          </div>
+        </div>
+        <p class="footnote">Todos os campos são editáveis e atualizam automaticamente.</p>
+      </div>
+    </div>
+  </div>
+  <!-- ⚙️ Modal de Configurações Globais -->
+  <dialog id="modalSettings">
+    <h2>Configurações Globais</h2>
+    <div style="max-height: 60vh; overflow-y: auto; padding-right:10px">
+      <h3>Cálculo Simples Nacional</h3>
+      <div class="row">
+        <div><label>DAS Anexo III (alíquota mensal)</label><input type="text" id="modal_aliquotaIII"
+            data-mask="percent"></div>
+        <div><label>DAS Anexo V (alíquota mensal)</label><input type="text" id="modal_aliquotaV" data-mask="percent">
+        </div>
+      </div>
+      <div class="row mt-4">
+        <div><label>Limiar Fator R (%)</label><input type="text" id="modal_limiarFatorR" data-mask="percent"></div>
+      </div>
+      <hr style="border:0; border-top:1px solid var(--border); margin:20px 0">
+      <h3>Encargos CLT e Sócios</h3>
+      <div class="row">
+        <div><label>FGTS (%)</label><input type="text" id="modal_fgts" data-mask="percent"></div>
+        <div><label>Multa FGTS (%)</label><input type="text" id="modal_fgtsMulta" data-mask="percent"></div>
+      </div>
+      <div class="row">
+        <div><label>13º Salário (%)</label><input type="text" id="modal_decimoTerceiro" data-mask="percent"></div>
+        <div><label>Férias+1/3 (%)</label><input type="text" id="modal_ferias" data-mask="percent"></div>
+      </div>
+      <div class="row">
+        <div><label>INSS Patronal (Prolabore) (%)</label><input type="text" id="modal_inssPatronalProlabore"
+            data-mask="percent"></div>
+        <div><label>INSS Patronal (CLT) (%)</label><input type="text" id="modal_inssPatronalCLT" data-mask="percent">
+        </div>
+      </div>
+      <hr style="border:0; border-top:1px solid var(--border); margin:20px 0">
+      <h3>Retenções e ISS</h3>
+      <div class="row">
+        <div><label>ISS (%)</label><input type="text" id="modal_iss" data-mask="percent"></div>
+        <div><label>Outras Retenções (%)</label><input type="text" id="modal_retencoes" data-mask="percent"></div>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn"
+        onclick="document.getElementById('modalSettings').close()">Cancelar</button><button class="btn primary"
+        id="btnSaveModal">Salvar Tudo</button></div>
+  </dialog>
+
+  <script> // Utilitários de máscara e parsing
+
+    const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const fmtPct = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const clamp = (x, min, max) => Math.max(min, Math.min(max, x));
+
+    const parseBRL = s => {
+      if (typeof s !== 'string') s = String(s || '');
+      s = s.replace(/\s/g, '').replace(/[Rr]\$\s?/, '').replace(/\./g, '').replace(',', '.');
+      const v = parseFloat(s);
+      return isNaN(v) ? 0 : v;
+    };
+
+    const parsePct = s => {
+      if (typeof s !== 'string') s = String(s || '');
+      s = s.replace('%', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+      const v = parseFloat(s);
+      return isNaN(v) ? 0 : v / 100;
+    };
+
+    const formatBRLInput = (el) => {
+      const v = parseBRL(el.value);
+      el.value = fmtBRL.format(v);
+      el.dataset.num = v;
+    };
+
+    const formatPctInput = (el) => {
+      const v = parsePct(el.value);
+      el.value = fmtPct.format(v);
+      el.dataset.num = v;
+    };
+
+    const getNum = id => {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      return el.dataset.num ? parseFloat(el.dataset.num) : parseBRL(el.value);
+    };
+
+    const pctNum = id => {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      return el.dataset.num ? parseFloat(el.dataset.num) : parsePct(el.value);
+    };
+
+    const INITIAL_STATE = {
+      version: '3.1.0',
+      modoAvancado: false,
+      receitaMensal: 18000,
+      receitas12m: new Array(12).fill(18000),
+      prolabore: 3000,
+      tetoINSS: 7500,
+      aliquotas: {
+        aliquotaIII: 0.06,
+        aliquotaV: 0.12,
+        limiarFatorR: 0.28,
+        inssEmpregado: 0.11,
+        inssPatronalProlabore: 0.20,
+        fgts: 0.08,
+        fgtsMulta: 0.032,
+        decimoTerceiro: 0.0833,
+        ferias: 0.1111,
+        inssPatronalCLT: 0,
+        rat: 0,
+        iss: 0.03,
+        retencoes: 0
+      },
+      funcionarios: [],
+      contratosCT: [],
+      custosVariaveis: [],
+      tabelaIII: [
+        { lim: 180000, aliq: 0.06, pd: 0 },
+        { lim: 360000, aliq: 0.112, pd: 9360 },
+        { lim: 720000, aliq: 0.135, pd: 17640 },
+        { lim: 1800000, aliq: 0.16, pd: 35640 },
+        { lim: 3600000, aliq: 0.21, pd: 125640 },
+        { lim: 4800000, aliq: 0.33, pd: 648000 }
+      ],
+      tabelaV: [
+        { lim: 180000, aliq: 0.155, pd: 0 },
+        { lim: 360000, aliq: 0.18, pd: 4500 },
+        { lim: 720000, aliq: 0.19, pd: 8100 },
+        { lim: 1800000, aliq: 0.205, pd: 18900 },
+        { lim: 3600000, aliq: 0.23, pd: 63900 },
+        { lim: 4800000, aliq: 0.305, pd: 333000 }
+      ],
+      tabelaIRPF: [
+        { lim: 2259.20, aliq: 0, pd: 0 },
+        { lim: 2826.65, aliq: 0.075, pd: 169.44 },
+        { lim: 3751.05, aliq: 0.15, pd: 381.44 },
+        { lim: 4664.68, aliq: 0.225, pd: 662.77 },
+        { lim: Infinity, aliq: 0.275, pd: 896.00 }
+      ]
+    };
+
+    let state = JSON.parse(JSON.stringify(INITIAL_STATE));
+    let historyStack = [];
+    const MAX_HISTORY = 20;
+
+    const pushToHistory = () => {
+      const snapshot = JSON.stringify(state);
+      if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== snapshot) {
+        historyStack.push(snapshot);
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+      }
+    };
+
+    const undo = () => {
+      if (historyStack.length > 1) {
+        historyStack.pop(); // Remove current state
+        const prevState = JSON.parse(historyStack[historyStack.length - 1]);
+        state = prevState;
+        applyStateToUI();
+        calcAll(true); // Don't push to history during undo
+      }
+    };
+
+    const applyStateToUI = () => {
+      document.getElementById('receitaMensal').value = fmtBRL.format(state.receitaMensal);
+      document.getElementById('prolabore').value = fmtBRL.format(state.prolabore);
+      document.getElementById('tetoINSS').value = fmtBRL.format(state.tetoINSS);
+
+      for (let id in state.aliquotas) {
+        const el = document.getElementById(id);
+        if (el) el.value = fmtPct.format(state.aliquotas[id]);
+      }
+
+      document.getElementById('modoAvancadoSimples').checked = state.modoAvancado;
+      document.getElementById('simplesBasico').style.display = state.modoAvancado ? 'none' : 'block';
+      document.getElementById('simplesAvancado').style.display = state.modoAvancado ? 'block' : 'none';
+
+      renderFuncionarios();
+      renderCT();
+      renderVariaveis();
+      drawRevenueHistory();
+      drawTabela('tabelaIII', state.tabelaIII, 'III');
+      drawTabela('tabelaV', state.tabelaV, 'V');
+      drawTabela('tabelaIRPF', state.tabelaIRPF, 'IRPF');
+    };
+
+    const attachMasks = () => {
+      document.querySelectorAll('[data-mask="currency"]:not(.has-mask)').forEach(el => {
+        el.classList.add('has-mask');
+        el.addEventListener('focus', () => { if (el.value) el.value = el.value.replace(/[Rr]\$\s?/, '').replace(/\./g, ''); });
+        el.addEventListener('blur', () => formatBRLInput(el));
+      });
+      document.querySelectorAll('[data-mask="percent"]:not(.has-mask)').forEach(el => {
+        el.classList.add('has-mask');
+        el.addEventListener('focus', () => { if (el.value) el.value = el.value.replace('%', ''); });
+        el.addEventListener('blur', () => formatPctInput(el));
+      });
+    };
+
+    const drawTabela = (tableId, data, tipo) => {
+      const tbody = document.querySelector(`#${tableId} tbody`);
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      data.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" class="tbl-lim" data-mask="currency" value="${fmtBRL.format(row.lim)}" data-row="${idx}" data-tipo="${tipo}"></td>
+            <td><input type="text" class="tbl-aliq" data-mask="percent" value="${fmtPct.format(row.aliq)}" data-row="${idx}" data-tipo="${tipo}"></td>
+            <td><input type="text" class="tbl-pd" data-mask="currency" value="${fmtBRL.format(row.pd)}" data-row="${idx}" data-tipo="${tipo}"></td>
+          `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('input').forEach(el => {
+        el.addEventListener('blur', (e) => {
+          const r = parseInt(el.dataset.row);
+          const t = el.dataset.tipo;
+          if (isNaN(r)) return;
+          const val = el.classList.contains('tbl-aliq') ? parsePct(e.target.value) : parseBRL(e.target.value);
+          const key = el.classList.contains('tbl-lim') ? 'lim' : (el.classList.contains('tbl-aliq') ? 'aliq' : 'pd');
+          if (t === 'III') state.tabelaIII[r][key] = val;
+          else if (t === 'V') state.tabelaV[r][key] = val;
+          else if (t === 'IRPF') state.tabelaIRPF[r][key] = val;
+          calcAll();
+        });
+      });
+      attachMasks();
+    };
+
+    const drawRevenueHistory = () => {
+      const grid = document.getElementById('revenueHistoryGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      const meses = ['Mês -11', 'Mês -10', 'Mês -9', 'Mês -8', 'Mês -7', 'Mês -6', 'Mês -5', 'Mês -4', 'Mês -3', 'Mês -2', 'Mês -1', 'Mês Atual'];
+      state.receitas12m.forEach((val, i) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<label>${meses[i]}</label><input type="text" data-mask="currency" value="${fmtBRL.format(val)}">`;
+        grid.appendChild(div);
+        const input = div.querySelector('input');
+        input.addEventListener('blur', (e) => {
+          const newVal = parseBRL(e.target.value);
+          state.receitas12m[i] = newVal;
+          if (i === 11) {
+            const mEl = document.getElementById('receitaMensal');
+            if (mEl) { mEl.value = fmtBRL.format(newVal); mEl.dataset.num = newVal; }
+          }
+          calcAll();
+        });
+      });
+      attachMasks();
+    };
+
+    const updateRBT12 = () => {
+      const total = state.receitas12m.reduce((a, b) => a + b, 0);
+      const el = document.getElementById('rbt12');
+      if (el) {
+        el.value = fmtBRL.format(total);
+        el.dataset.num = total;
+      }
+    };
+
+    const calcFatorR = () => {
+      const folha12 = getNum('folha12');
+      const rbt12 = getNum('rbt12');
+      const fator = rbt12 > 0 ? (folha12 / rbt12) : 0;
+      const limiar = pctNum('limiarFatorR');
+      const anexo = (fator >= limiar) ? 'III' : 'V';
+      const fEl = document.getElementById('fatorR');
+      const aEl = document.getElementById('anexoAplicado');
+      const pEl = document.getElementById('pillFR');
+      if (fEl) fEl.textContent = fmtPct.format(fator);
+      if (aEl) aEl.innerHTML = `<span class="pill ${anexo === 'III' ? 'ok' : 'warning'}">${anexo}</span>`;
+      if (pEl) pEl.innerHTML = `<span class="pill ${fator >= limiar ? 'ok' : 'warning'}">${fator >= limiar ? '≥' : '<'} limiar</span>`;
+      return anexo;
+    };
+
+    const calcIRPF = (base) => {
+      const faixa = state.tabelaIRPF.find(f => base <= f.lim) || state.tabelaIRPF[state.tabelaIRPF.length - 1];
+      return Math.max(0, (base * faixa.aliq) - faixa.pd);
+    };
+
+    const calcSimplesBasico = (anexo) => {
+      const receita = getNum('receitaMensal');
+      const aliq = (anexo === 'III') ? pctNum('aliquotaIII') : pctNum('aliquotaV');
+      const das = receita * aliq;
+      document.getElementById('dasMensal').textContent = fmtBRL.format(das);
+      return das;
+    };
+
+    const calcAliquotaEfetiva = (rbt12, tabela) => {
+      let faixa = tabela.find(f => rbt12 <= f.lim) || tabela[tabela.length - 1];
+      const efetiva = rbt12 > 0 ? ((rbt12 * faixa.aliq - faixa.pd) / rbt12) : 0;
+      return clamp(efetiva, 0, 1);
+    };
+
+    const calcSimplesAvancado = (anexo) => {
+      const receita = getNum('receitaMensal');
+      const rbt12 = getNum('rbt12');
+      const tabela = (anexo === 'III') ? state.tabelaIII : state.tabelaV;
+      const efetiva = calcAliquotaEfetiva(rbt12, tabela);
+      document.getElementById('aliquotaEfetiva').textContent = fmtPct.format(efetiva);
+      const das = receita * efetiva;
+      document.getElementById('dasMensalAvancado').textContent = fmtBRL.format(das);
+      return das;
+    };
+
+    const atualizarFolha12 = () => {
+      // Massa Salarial Acumulada (12m) specifically for Fator R:
+      // Includes: Gross Salaries (CLT) + CLT Charges (FGTS, CPP, 13º, Férias) + Gross Pró-labore + CPP Pró-labore.
+      // EXCLUDES: CT Contracts (Civis/Terceirizados).
+
+      const pro = state.prolabore;
+      const inssPatProVal = state.aliquotas.inssPatronalProlabore;
+      const limiar = state.aliquotas.limiarFatorR;
+
+      // We need to estimate if CPP is paid based on current factor R logic
+      const rbt12 = state.receitas12m.reduce((a, b) => a + b, 0);
+      const currentFolhaValue = getNum('folha12'); // Last known value to avoid bootstrapping issues
+      const factorR = rbt12 > 0 ? (currentFolhaValue / rbt12) : 0;
+      const anexo = (factorR >= limiar) ? 'III' : 'V';
+
+      const cppSocio = (anexo === 'III') ? 0 : pro * inssPatProVal;
+      const massaSocioMensal = pro + cppSocio;
+
+      const cltData = calcCLT();
+      const massaCLTMensal = cltData.totalCost; // totalCost = Salary + Charges + Benefits
+
+      const massaTotalMensal = massaSocioMensal + massaCLTMensal;
+      const massaAnual = massaTotalMensal * 12;
+
+      const el = document.getElementById('folha12');
+      if (el) { el.value = fmtBRL.format(massaAnual); el.dataset.num = massaAnual; }
+    };
+
+    const calcSocio = () => {
+      const pro = getNum('prolabore');
+      const teto = getNum('tetoINSS');
+      const inssEmp = pctNum('inssEmpregado');
+      const inssPatPro = pctNum('inssPatronalProlabore');
+      const baseINSS = Math.min(pro, teto);
+      const inssSocio = baseINSS * inssEmp;
+      const irpf = calcIRPF(pro - inssSocio);
+      const anexo = calcFatorR();
+      const custoPatronal = (anexo === 'III') ? 0 : pro * inssPatPro;
+      const totalSocio = pro + custoPatronal;
+
+      document.getElementById('inssSocio').textContent = fmtBRL.format(inssSocio);
+      document.getElementById('irpfSocio').textContent = fmtBRL.format(irpf);
+      document.getElementById('custoPatronalProlabore').textContent = fmtBRL.format(custoPatronal);
+      document.getElementById('custoSocioTotal').textContent = fmtBRL.format(totalSocio);
+      return { inssSocio, custoPatronal, irpf, totalSocio };
+    };
+
+    const ensureResumoCPP = () => {
+      if (document.getElementById('outCPP')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'total';
+      wrap.innerHTML = '<span class="label">Custo patronal pró-labore</span><strong id="outCPP" class="value">R$ 0,00</strong>';
+      const cargaEl = document.getElementById('cargaTotal');
+      if (cargaEl) cargaEl.parentElement.insertAdjacentElement('beforebegin', wrap);
+    };
+
+    const calcCLT = () => {
+      let totalCost = 0;
+      let totalCharges = 0;
+      const p = {
+        fgts: pctNum('fgts'), fgtsM: pctNum('fgtsMulta'), dt: pctNum('decimoTerceiro'),
+        fer: pctNum('ferias'), inss: pctNum('inssPatronalCLT'), rat: pctNum('rat')
+      };
+      const taxRate = p.fgts + p.fgtsM + p.dt + p.fer + p.inss + p.rat;
+
+      state.funcionarios.forEach((f, idx) => {
+        const salary = f.salario || 0;
+        const benefits = f.beneficios || 0;
+        const charges = salary * taxRate;
+        const total = salary + charges + benefits;
+        totalCost += total;
+        totalCharges += charges;
+        const el = document.getElementById(`custo-func-${idx}`);
+        if (el) el.textContent = fmtBRL.format(total);
+      });
+      const tEl = document.getElementById('custoCLTTotal');
+      if (tEl) tEl.textContent = fmtBRL.format(totalCost);
+      return { totalCost, totalCharges };
+    };
+
+    const calcCT = () => {
+      const iss = pctNum('iss');
+      const ret = pctNum('retencoes');
+      let baseTotal = 0;
+      let retTotal = 0;
+      state.contratosCT.forEach(c => {
+        const val = c.valor || 0;
+        baseTotal += val;
+        retTotal += val * (iss + ret);
+      });
+      const totalComISS = baseTotal + (baseTotal * iss);
+      const tEl = document.getElementById('custoCTTotal');
+      if (tEl) tEl.textContent = fmtBRL.format(totalComISS);
+      return { baseTotal, retTotal, totalComISS };
+    };
+
+    const calcVariaveis = () => {
+      let total = 0;
+      state.custosVariaveis.forEach(c => {
+        total += c.valor || 0;
+      });
+      const receita = state.receitaMensal;
+      const perc = receita > 0 ? (total / receita) : 0;
+
+      const tEl = document.getElementById('custoVariavelTotal');
+      if (tEl) tEl.textContent = fmtBRL.format(total);
+
+      const pEl = document.getElementById('percVariavel');
+      if (pEl) pEl.textContent = fmtPct.format(perc);
+
+      return total;
+    };
+
+    const flushListsToState = () => {
+      document.querySelectorAll('#listaFuncionarios .item-add').forEach((div, idx) => {
+        if (state.funcionarios[idx]) {
+          state.funcionarios[idx].nome = div.querySelector('.f-nome').value;
+          state.funcionarios[idx].salario = parseBRL(div.querySelector('.f-sal').value);
+          state.funcionarios[idx].beneficios = parseBRL(div.querySelector('.f-ben').value);
+        }
+      });
+      document.querySelectorAll('#listaCT .item-add').forEach((div, idx) => {
+        if (state.contratosCT[idx]) {
+          state.contratosCT[idx].descricao = div.querySelector('.c-desc').value;
+          state.contratosCT[idx].valor = parseBRL(div.querySelector('.c-val').value);
+        }
+      });
+      document.querySelectorAll('#listaVariaveis .item-add').forEach((div, idx) => {
+        if (state.custosVariaveis[idx]) {
+          state.custosVariaveis[idx].descricao = div.querySelector('.v-desc').value;
+          state.custosVariaveis[idx].valor = parseBRL(div.querySelector('.v-val').value);
+        }
+      });
+    };
+
+    const renderFuncionarios = () => {
+      const container = document.getElementById('listaFuncionarios');
+      container.innerHTML = '';
+      state.funcionarios.forEach((f, idx) => {
+        const div = document.createElement('div');
+        div.className = 'item-add';
+        div.innerHTML = `
+            <input type="text" placeholder="Nome/Cargo" value="${f.nome}" class="f-nome">
+            <input type="text" data-mask="currency" value="${fmtBRL.format(f.salario)}" class="f-sal">
+            <input type="text" data-mask="currency" value="${fmtBRL.format(f.beneficios)}" class="f-ben">
+            <span class="value" id="custo-func-${idx}">R$ 0,00</span>
+            <button class="btn small danger">✕</button>
+          `;
+        div.querySelector('.f-nome').addEventListener('input', (e) => { state.funcionarios[idx].nome = e.target.value; salvarLocalStorageDebounced(); });
+        div.querySelector('.f-sal').addEventListener('input', (e) => { state.funcionarios[idx].salario = parseBRL(e.target.value); calcAll(); });
+        div.querySelector('.f-ben').addEventListener('input', (e) => { state.funcionarios[idx].beneficios = parseBRL(e.target.value); calcAll(); });
+        div.querySelector('.danger').addEventListener('click', () => { state.funcionarios.splice(idx, 1); renderFuncionarios(); calcAll(); });
+        container.appendChild(div);
+      });
+      attachMasks();
+    };
+
+    const renderCT = () => {
+      const container = document.getElementById('listaCT');
+      container.innerHTML = '';
+      state.contratosCT.forEach((c, idx) => {
+        const div = document.createElement('div');
+        div.className = 'item-add';
+        div.innerHTML = `
+            <input type="text" placeholder="Descrição" value="${c.descricao}" class="c-desc">
+            <input type="text" data-mask="currency" value="${fmtBRL.format(c.valor)}" class="c-val">
+            <button class="btn small danger">✕</button>
+          `;
+        div.querySelector('.c-desc').addEventListener('input', (e) => { state.contratosCT[idx].descricao = e.target.value; salvarLocalStorageDebounced(); });
+        div.querySelector('.c-val').addEventListener('input', (e) => { state.contratosCT[idx].valor = parseBRL(e.target.value); calcAll(); });
+        div.querySelector('.danger').addEventListener('click', () => { state.contratosCT.splice(idx, 1); renderCT(); calcAll(); });
+        container.appendChild(div);
+      });
+      attachMasks();
+    };
+
+    const renderVariaveis = () => {
+      const container = document.getElementById('listaVariaveis');
+      container.innerHTML = '';
+      state.custosVariaveis.forEach((v, idx) => {
+        const div = document.createElement('div');
+        div.className = 'item-add';
+        div.innerHTML = `
+            <input type="text" placeholder="Descrição" value="${v.descricao}" class="v-desc">
+            <input type="text" data-mask="currency" value="${fmtBRL.format(v.valor)}" class="v-val">
+            <button class="btn small danger">✕</button>
+          `;
+        div.querySelector('.v-desc').addEventListener('input', (e) => { state.custosVariaveis[idx].descricao = e.target.value; salvarLocalStorageDebounced(); });
+        div.querySelector('.v-val').addEventListener('input', (e) => { state.custosVariaveis[idx].valor = parseBRL(e.target.value); calcAll(); });
+        div.querySelector('.danger').addEventListener('click', () => { state.custosVariaveis.splice(idx, 1); renderVariaveis(); calcAll(); });
+        container.appendChild(div);
+      });
+      attachMasks();
+    };
+
+    const calcAll = (skipHistory = false) => {
+      // Sync basic inputs to state before calculating
+      state.receitaMensal = getNum('receitaMensal');
+      state.prolabore = getNum('prolabore');
+      state.tetoINSS = getNum('tetoINSS');
+      for (let id in state.aliquotas) {
+        state.aliquotas[id] = pctNum(id);
+      }
+
+      updateRBT12();
+      atualizarFolha12();
+      const anexo = calcFatorR();
+      const das = state.modoAvancado ? calcSimplesAvancado(anexo) : calcSimplesBasico(anexo);
+      const socio = calcSocio();
+      const clt = calcCLT();
+      const ct = calcCT();
+      const variaveis = calcVariaveis();
+      ensureResumoCPP();
+
+      // Carga Tributária Total = Impostos sobre Empresa e Sócio
+      const carga = das + socio.inssSocio + socio.irpf + clt.totalCharges + socio.custoPatronal + ct.retTotal;
+      const receita = state.receitaMensal;
+      const custoOperacao = socio.totalSocio + clt.totalCost + ct.totalComISS;
+      const totalDespesas = das + custoOperacao + variaveis;
+
+      const setT = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmtBRL.format(val); };
+      const setInd = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const p = receita > 0 ? (val / receita) : 0;
+        el.textContent = `${fmtBRL.format(val)} (${fmtPct.format(p)})`;
+      };
+
+      setT('outDAS', das);
+      setT('outINSSSocio', socio.inssSocio);
+      setT('outIRPF', socio.irpf);
+      setT('outCLT', clt.totalCharges);
+      setT('outCT', ct.retTotal);
+      setT('outCPP', socio.custoPatronal);
+      setT('cargaTotal', carga);
+
+      setInd('indCarga', carga);
+      setInd('indCustoOp', custoOperacao);
+      setInd('indVariaveis', variaveis);
+      setInd('indTotalDespesas', totalDespesas);
+
+      if (!skipHistory) pushToHistory();
+      salvarLocalStorageDebounced();
+    };
+
+    const STORAGE_KEY = 'simuladorTributarioV3';
+    let saveTimer;
+    const salvarLocalStorageDebounced = () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }, 1000);
+    };
+
+    const carregarLocalStorage = () => {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      try {
+        const loadedState = JSON.parse(raw);
+        // Basic migration attempt if needed, but for now just assign
+        state = loadedState;
+        applyStateToUI();
+        return true;
+      } catch (e) { return false; }
+    };
+
+    const openSettings = () => {
+      const fields = ['aliquotaIII', 'aliquotaV', 'limiarFatorR', 'fgts', 'fgtsMulta', 'decimoTerceiro', 'ferias', 'inssPatronalProlabore', 'inssPatronalCLT', 'iss', 'retencoes'];
+      fields.forEach(f => {
+        const modalEl = document.getElementById(`modal_${f}`);
+        const originalEl = document.getElementById(f);
+        if (modalEl && originalEl) modalEl.value = originalEl.value;
+      });
+      document.getElementById('modalSettings').showModal();
+    };
+
+    const saveSettings = () => {
+      const fields = ['aliquotaIII', 'aliquotaV', 'limiarFatorR', 'fgts', 'fgtsMulta', 'decimoTerceiro', 'ferias', 'inssPatronalProlabore', 'inssPatronalCLT', 'iss', 'retencoes'];
+      fields.forEach(f => {
+        const modalEl = document.getElementById(`modal_${f}`);
+        const el = document.getElementById(f);
+        if (modalEl && el) { el.value = modalEl.value; formatPctInput(el); }
+      });
+      document.getElementById('modalSettings').close();
+      calcAll();
+    };
+
+    const wireEvents = () => {
+      document.getElementById('receitaMensal').addEventListener('blur', (e) => {
+        const val = parseBRL(e.target.value);
+        state.receitas12m[11] = val;
+        drawRevenueHistory();
+        calcAll();
+      });
+      document.getElementById('modoAvancadoSimples').addEventListener('change', (e) => {
+        state.modoAvancado = e.target.checked;
+        document.getElementById('simplesBasico').style.display = state.modoAvancado ? 'none' : 'block';
+        document.getElementById('simplesAvancado').style.display = state.modoAvancado ? 'block' : 'none';
+        calcAll();
+      });
+      document.getElementById('btnOpenSettings').addEventListener('click', openSettings);
+      document.getElementById('btnSaveModal').addEventListener('click', saveSettings);
+      document.getElementById('btnUndo').addEventListener('click', undo);
+      document.getElementById('btnClear').addEventListener('click', () => { if (confirm('Limpar todos os dados?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } });
+      document.getElementById('resetar').addEventListener('click', () => {
+        if (confirm('Sair sem salvar e resetar para padrão?')) {
+          state = JSON.parse(JSON.stringify(INITIAL_STATE));
+          applyStateToUI();
+          calcAll();
+        }
+      });
+      document.getElementById('btnDownload').addEventListener('click', () => {
+        const d = localStorage.getItem(STORAGE_KEY);
+        if (!d) return alert('Sem dados salvos');
+        const blob = new Blob([d], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'simulador_simples.json';
+        a.click();
+      });
+      document.getElementById('btnUpload').addEventListener('change', (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => { localStorage.setItem(STORAGE_KEY, ev.target.result); location.reload(); };
+        reader.readAsText(e.target.files[0]);
+      });
+      ['prolabore', 'tetoINSS', 'inssEmpregado', 'inssPatronalProlabore', 'fgts', 'fgtsMulta', 'decimoTerceiro', 'ferias', 'inssPatronalCLT', 'rat', 'iss', 'retencoes', 'limiarFatorR', 'aliquotaIII', 'aliquotaV'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('blur', calcAll);
+      });
+      document.getElementById('adicionarFuncionario').addEventListener('click', () => {
+        flushListsToState();
+        state.funcionarios.push({ nome: '', salario: 0, beneficios: 0 });
+        renderFuncionarios();
+        calcAll();
+      });
+      document.getElementById('adicionarCT').addEventListener('click', () => {
+        flushListsToState();
+        state.contratosCT.push({ descricao: '', valor: 0 });
+        renderCT();
+        calcAll();
+      });
+      document.getElementById('adicionarVariacel').addEventListener('click', () => {
+        flushListsToState();
+        state.custosVariaveis.push({ descricao: '', valor: 0 });
+        renderVariaveis();
+        calcAll();
+      });
+      document.getElementById('preencherTabelaPadrao').addEventListener('click', () => {
+        state.tabelaIII = JSON.parse(JSON.stringify(INITIAL_STATE.tabelaIII));
+        state.tabelaV = JSON.parse(JSON.stringify(INITIAL_STATE.tabelaV));
+        drawTabela('tabelaIII', state.tabelaIII, 'III');
+        drawTabela('tabelaV', state.tabelaV, 'V');
+        calcAll();
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      wireEvents();
+      if (!carregarLocalStorage()) {
+        state.funcionarios = [{ nome: 'Designer Pleno', salario: 4000, beneficios: 600 }, { nome: 'Dev Frontend', salario: 5000, beneficios: 700 }];
+        state.contratosCT = [{ descricao: 'Redator PJ', valor: 2500 }];
+        state.custosVariaveis = [{ descricao: 'ChatGPT / Copilot', valor: 250 }];
+        applyStateToUI();
+      }
+      calcAll();
+    });
+  </script>
+</body>
+
+</html>
