@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Simulador tributário para agências web (CNAE 6201-5/02). Configure alíquotas, tabelas e calcule impostos automaticamente." />
+  <meta name="keywords" content="simples nacional, fator r, cnae 6201-5/02, tributário, simulador" />
+  <title>Simulador Tributário e de Custos - Agência Web (CNAE 6201-5/02)</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1>Simulador tributário e de custos • Agência Web (CNAE 6201-5/02)</h1>
+    <p>Configure livremente alíquotas, tabelas e percentuais. Cálculo automático e máscaras brasileiras.</p>
+  </header>
+
+  <div class="container">
+    <!-- Botões de controle de dados -->
+    <div class="card span-12 mb-4">
+      <div class="section-title">
+        <h2>Gerenciar dados do simulador</h2>
+      </div>
+      <div class="flex" style="margin-top:10px; gap:12px; flex-wrap:wrap">
+        <button class="btn primary" id="btnDownloadJSON">⬇️ Exportar JSON</button>
+        <label class="btn" style="cursor:pointer">⬆️ Importar JSON
+          <input type="file" id="btnUploadJSON" accept=".json" style="display:none">
+        </label>
+        <button class="btn" id="btnExportCSV">📊 Exportar CSV</button>
+        <button class="btn" id="btnExportHTML">📄 Exportar HTML</button>
+        <button class="btn" id="btnOpenSettings">⚙️ Configurações Globais</button>
+        <button class="btn" id="btnUndo">⟲ Desfazer</button>
+        <button class="btn" id="btnSaveStorage">Salvar agora</button>
+        <button class="btn" id="btnLoadStorage">Carregar salvo</button>
+        <button class="btn danger" id="btnClearStorage">Limpar salvo</button>
+      </div>
+      <p class="footnote">Importe e exporte JSON para backup. O autosalvamento pode ser controlado em Configurações Globais.</p>
+      <p class="storage-status" id="storageStatus" role="status" aria-live="polite">Nenhum estado salvo nesta sessão.</p>
+    </div>
+
+    <!-- Gráficos -->
+    <details class="mb-4">
+      <summary>Visualizações gráficas</summary>
+      <div class="card span-12 mb-4">
+        <h2>Visualizações</h2>
+        <div class="row">
+          <div>
+            <h3>Carga Tributária</h3>
+            <canvas id="chartCarga" style="max-height: 300px;"></canvas>
+          </div>
+          <div>
+            <h3>Distribuição de Custos</h3>
+            <canvas id="chartCustos" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div class="grid">
+      <!-- Receita e Fator R -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Receita e fator R</h2><span class="badge">Migração automática III ↔ V</span>
+        </div>
+        <details class="mb-4">
+          <div class="row">
+            <div>
+              <label for="receitaMensal">Receita mensal (Mês Atual)</label>
+              <input type="text" id="receitaMensal" data-mask="currency" value="R$ 18.000,00"
+                aria-label="Receita mensal">
+              <div class="help">Usa o mês de referência da projeção ou o valor manual informado.</div>
+            </div>
+            <div>
+              <label for="rbt12">Receita acumulada 12 meses (RBT12)</label>
+              <input type="text" id="rbt12" data-mask="currency" value="R$ 600.000,00" readonly
+                aria-label="Receita acumulada 12 meses">
+              <div class="help">Soma dos 12 meses projetados ou ajustados manualmente.</div>
+            </div>
+          </div>
+        </details>
+        <details class="mb-4" id="detailsRevenue">
+          <summary>Ver/Editar Histórico de 12 Meses</summary>
+          <div class="rev-history" id="revenueHistoryGrid">
+            <!-- Gerado via JS: 12 meses de inputs -->
+          </div>
+          <p class="footnote">Ao editar qualquer mês manualmente, a projeção automática é desativada para preservar o ajuste informado.</p>
+        </details>
+        <details class="mb-4" id="detailsProjection">
+          <summary>Cronograma Financeiro Projetado: Ano 1</summary>
+          <div class="table-scroll">
+            <table class="projection-table" id="revenueProjectionTable">
+              <thead>
+                <tr>
+                  <th>Mês</th>
+                  <th>Novos clientes</th>
+                  <th>Clientes pagando</th>
+                  <th>Setup</th>
+                  <th>Mensalidade</th>
+                  <th>Total do mês</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr>
+                  <th>Total</th>
+                  <th id="projectionTotalNewClients">0</th>
+                  <th>—</th>
+                  <th id="projectionTotalSetup">R$ 0,00</th>
+                  <th id="projectionTotalRecurring">R$ 0,00</th>
+                  <th id="projectionTotalRevenue">R$ 0,00</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <p class="footnote" id="projectionStatus">Configure os valores em Configurações Globais.</p>
+        </details>
+        <div class="row">
+          <div>
+            <label for="folha12">Massa Salarial Acumulada 12 meses</label>
+            <input class="total highlight" type="text" id="folha12" data-mask="currency" value="R$ 180.000,00" readonly
+              aria-label="Massa salarial acumulada">
+            <details class="mt-4">
+              <summary>Informações detalhadas</summary>
+              <div class="help">A estimativa usada pelo simulador considera pró-labore e o custo mensal dos funcionários CLT cadastrados, incluindo os encargos configurados. Contratos CT, INSS retido do sócio e IRPF ficam fora desta base.</div>
+            </details>
+          </div>
+          <div>
+            <label for="limiarFatorR">Limiar Fator R (%) para Anexo III</label>
+            <input type="text" id="limiarFatorR" data-mask="percent" value="28,00%"
+              aria-label="Limiar Fator R">
+          </div>
+        </div>
+        <div class="total">
+          <span class="label">Fator R</span>
+          <strong id="fatorR" class="value">31,00%</strong>
+        </div>
+        <p class="footnote" id="fatorRBase">Base usada: histórico manual.</p>
+        <div class="total">
+          <span class="label">Anexo aplicado</span>
+          <strong id="anexoAplicado" class="value"><span class="pill ok">III</span></strong>
+        </div>
+      </div>
+
+      <!-- Simples Nacional -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Simples Nacional (DAS)</h2>
+          <label class="switch">
+            <input type="checkbox" id="modoAvancadoSimples" aria-label="Usar tabela progressiva">
+            <span>Usar tabela progressiva (avançado)</span>
+          </label>
+        </div>
+        <!-- Modo simples: alíquota direta -->
+        <div id="simplesBasico">
+          <div class="row">
+            <div>
+              <label for="aliquotaIII">DAS Anexo III (alíquota mensal)</label>
+              <input type="text" id="aliquotaIII" data-mask="percent" value="6,00%"
+                aria-label="Alíquota DAS Anexo III">
+            </div>
+            <div>
+              <label for="aliquotaV">DAS Anexo V (alíquota mensal)</label>
+              <input type="text" id="aliquotaV" data-mask="percent" value="12,00%"
+                aria-label="Alíquota DAS Anexo V">
+            </div>
+          </div>
+          <div class="total">
+            <span class="label">DAS calculado (mensal)</span>
+            <strong id="dasMensal" class="value">R$ 3.000,00</strong>
+          </div>
+        </div>
+        <!-- Modo avançado: tabela progressiva -->
+        <div id="simplesAvancado" style="display:none">
+          <p class="note">Edite as faixas, alíquotas nominais e parcelas a deduzir para o ano vigente. O cálculo aplica a
+            alíquota efetiva: (RBT12 × alíquota − PD) ÷ RBT12.</p>
+          <div class="inline">
+            <button class="btn small" id="preencherTabelaPadrao">Carregar valores-padrão (editar depois)</button>
+            <span class="help">Confira os valores oficiais antes de usar.</span>
+          </div>
+          <div class="table-grid">
+            <div class="table-card">
+              <label>Tabela Anexo III</label>
+              <table id="tabelaIII">
+                <thead>
+                  <tr>
+                    <th>Faixa RBT12</th>
+                    <th>Alíquota</th>
+                    <th>Parcela a deduzir</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Linhas geradas via JS -->
+                </tbody>
+              </table>
+            </div>
+            <div class="table-card">
+              <label>Tabela Anexo V</label>
+              <table id="tabelaV">
+                <thead>
+                  <tr>
+                    <th>Faixa RBT12</th>
+                    <th>Alíquota</th>
+                    <th>Parcela a deduzir</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="total">
+            <span class="label">Alíquota efetiva do anexo aplicado</span>
+            <strong id="aliquotaEfetiva" class="value">—</strong>
+          </div>
+          <div class="total">
+            <span class="label">DAS calculado (mensal, avançado)</span>
+            <strong id="dasMensalAvancado" class="value">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sócio (Pro-labore) -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Pro-labore do sócio</h2><span class="badge">INSS e IRPF editáveis</span>
+        </div>
+        <div class="row">
+          <div>
+            <label for="prolabore">Pro-labore mensal</label>
+            <input type="text" id="prolabore" data-mask="currency" value="R$ 3.000,00"
+              aria-label="Pro-labore mensal">
+          </div>
+          <div>
+            <label for="tetoINSS">Teto INSS mensal (editável)</label>
+            <input type="text" id="tetoINSS" data-mask="currency" value="R$ 8.475,55"
+              aria-label="Teto INSS mensal">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="inssEmpregado">INSS do sócio / contribuinte individual (%)</label>
+            <input type="text" id="inssEmpregado" data-mask="percent" value="11,00%"
+              aria-label="INSS do sócio ou contribuinte individual">
+            <div class="help">Aplica até o teto, sem salário-família</div>
+          </div>
+          <div>
+            <span class="label">CPP patronal adicional</span>
+            <div class="help">Não é somada separadamente nos Anexos III e V, pois o simulador considera a CPP como componente do DAS. O Anexo IV está fora do escopo.</div>
+          </div>
+        </div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer">Configurar IRPF progressivo</summary>
+          <div class="footnote">A tabela padrão segue a incidência mensal de 2026. O cálculo considera a dedução mais vantajosa entre INSS e desconto simplificado, além da redução mensal quando aplicável.</div>
+          <table id="tabelaIRPF">
+            <thead>
+              <tr>
+                <th>Até (R$)</th>
+                <th>Alíquota</th>
+                <th>Parcela a deduzir</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Gerado via JS -->
+            </tbody>
+          </table>
+        </details>
+        <div class="total">
+          <span class="label">INSS do sócio (CPF)</span>
+          <strong id="inssSocio" class="value">R$ 467,50</strong>
+        </div>
+        <div class="total">
+          <span class="label">IRPF do sócio (CPF)</span>
+          <strong id="irpfSocio" class="value">R$ 188,29</strong>
+        </div>
+        <div class="total">
+          <span class="label">CPP adicional (Anexo IV fora do escopo)</span>
+          <strong id="custoPatronalProlabore" class="value">R$ 1.000,00</strong>
+        </div>
+        <div class="total highlight">
+          <span class="label">Custo total do sócio</span>
+          <strong id="custoSocioTotal" class="value">R$ 6.000,00</strong>
+        </div>
+      </div>
+
+      <!-- Funcionários CLT -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Funcionários CLT</h2>
+          <button class="btn small" id="adicionarFuncionario">Adicionar funcionário</button>
+        </div>
+        <div id="listaFuncionarios"></div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer">Encargos padrão (editar)</summary>
+          <div class="row">
+            <div>
+              <label for="fgts">FGTS (%)</label>
+              <input type="text" id="fgts" data-mask="percent" value="8,00%" aria-label="FGTS">
+            </div>
+            <div>
+              <label for="fgtsMulta">Provisão multa FGTS (%)</label>
+              <input type="text" id="fgtsMulta" data-mask="percent" value="3,20%" aria-label="Multa FGTS">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="decimoTerceiro">13º salário (provisão mensal)</label>
+              <input type="text" id="decimoTerceiro" data-mask="percent" value="8,33%" aria-label="13º salário">
+            </div>
+            <div>
+              <label for="ferias">Férias+1/3 (provisão mensal)</label>
+              <input type="text" id="ferias" data-mask="percent" value="11,11%" aria-label="Férias">
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="inssPatronalCLT">INSS patronal (%)</label>
+              <input type="text" id="inssPatronalCLT" data-mask="percent" value="0,00%" aria-label="INSS patronal CLT">
+              <div class="help">Edite conforme regime (Simples pode substituir CPP)</div>
+            </div>
+            <div>
+              <label for="rat">RAT (%)</label>
+              <input type="text" id="rat" data-mask="percent" value="0,00%" aria-label="RAT">
+              <div class="help">Risco ambiental do trabalho (se aplicável)</div>
+            </div>
+          </div>
+        </details>
+        <div class="total highlight">
+          <span class="label">Custo total CLT (mensal)</span>
+          <strong id="custoCLTTotal" class="value">R$ 0,00</strong>
+        </div>
+      </div>
+
+      <!-- Prestadores CT -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Prestadores CT (PJ/Autônomos)</h2>
+          <button class="btn small" id="adicionarCT">Adicionar contrato</button>
+        </div>
+        <div id="listaCT"></div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer">Retenções e ISS (editar)</summary>
+          <div class="row">
+            <div>
+              <label for="iss">ISS (%)</label>
+              <input type="text" id="iss" data-mask="percent" value="3,00%" aria-label="ISS">
+            </div>
+            <div>
+              <label for="retencoes">Outras retenções (%)</label>
+              <input type="text" id="retencoes" data-mask="percent" value="0,00%" aria-label="Outras retenções">
+            </div>
+          </div>
+          <div class="footnote">Use conforme município/contrato (opcional). Pode zerar.</div>
+        </details>
+        <div class="total highlight">
+          <span class="label">Custo total CT (mensal + tributos)</span>
+          <strong id="custoCTTotal" class="value">R$ 0,00</strong>
+        </div>
+        <p class="footnote">Inclui valor contratual, ISS e outras retenções uma única vez.</p>
+      </div>
+
+      <!-- Custos Variáveis -->
+      <div class="card span-6">
+        <div class="section-title">
+          <h2>Plugins / Licenças / Outros</h2>
+          <button class="btn small" id="adicionarVariacel">Adicionar custo</button>
+        </div>
+        <div id="listaVariaveis"></div>
+        <div class="total highlight">
+          <span class="label">Total variáveis (mensal)</span>
+          <strong id="custoVariavelTotal" class="value">R$ 0,00</strong>
+        </div>
+        <div class="total">
+          <span class="label">% em relação à Receita</span>
+          <strong id="percVariavel" class="value">0,00%</strong>
+        </div>
+      </div>
+
+      <!-- Consolidação -->
+      <div class="card span-12">
+        <div class="section-title">
+          <h2>Consolidação e carga tributária</h2>
+          <button class="btn" id="resetar">Resetar valores-padrão</button>
+        </div>
+        <div class="row">
+          <div class="card">
+            <h3>Impostos e Contribuições</h3>
+            <div class="total">
+              <span class="label">DAS (Simples Nacional)</span>
+              <strong id="outDAS" class="value">R$ 0,00</strong>
+            </div>
+            <div class="total">
+              <span class="label">INSS do Sócio</span>
+              <strong id="outINSSSocio" class="value">R$ 0,00</strong>
+            </div>
+            <div class="total">
+              <span class="label">IRPF do Sócio</span>
+              <strong id="outIRPF" class="value">R$ 0,00</strong>
+            </div>
+            <div class="total">
+              <span class="label">Encargos CLT</span>
+              <strong id="outCLT" class="value">R$ 0,00</strong>
+            </div>
+            <div class="total">
+              <span class="label">Tributos CT (ISS + outras retenções)</span>
+              <strong id="outCT" class="value">R$ 0,00</strong>
+            </div>
+            <div class="total">
+              <span class="label">CPP adicional (não aplicável aos Anexos III/V)</span>
+              <strong id="outCPP" class="value">R$ 0,00</strong>
+            </div>
+            <div class="total highlight">
+              <span class="label">Carga Tributária Total</span>
+              <strong id="cargaTotal" class="value">R$ 0,00</strong>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Indicadores</h3>
+            <div class="total">
+              <span class="label">Carga Tributária</span>
+              <strong id="indCarga" class="value">R$ 0,00 (0,00%)</strong>
+            </div>
+            <div class="total">
+              <span class="label">Custo de Operação</span>
+              <strong id="indCustoOp" class="value">R$ 0,00 (0,00%)</strong>
+            </div>
+            <div class="total">
+              <span class="label">Custos Variáveis</span>
+              <strong id="indVariaveis" class="value">R$ 0,00 (0,00%)</strong>
+            </div>
+            <div class="total highlight">
+              <span class="label">Total de Despesas</span>
+              <strong id="indTotalDespesas" class="value">R$ 0,00 (0,00%)</strong>
+            </div>
+            <p class="footnote">DAS + custo de operação (já com tributos CT) + custos variáveis. A carga tributária é apenas uma visão analítica e não é somada novamente.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculadora de Preço de Venda -->
+      <div class="card span-12">
+        <h2>Calculadora de Preço de Venda</h2>
+        <p class="sub">Ferramenta reversa: quanto cobrar para ter lucro desejado?</p>
+        <div class="row">
+          <div>
+            <label for="precoCustos">Custos Totais (R$)</label>
+            <input type="text" id="precoCustos" data-mask="currency" value="R$ 0,00"
+              aria-label="Custos totais para cálculo de preço">
+          </div>
+          <div>
+            <label for="precoLucro">Lucro Desejado (R$)</label>
+            <input type="text" id="precoLucro" data-mask="currency" value="R$ 0,00"
+              aria-label="Lucro desejado">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="precoAliquota">Alíquota DAS (%)</label>
+            <input type="text" id="precoAliquota" data-mask="percent" value="6,00%"
+              aria-label="Alíquota DAS para cálculo">
+          </div>
+          <div>
+            <button class="btn primary mt-14" id="btnCalcPreco">Calcular Preço Mínimo</button>
+          </div>
+        </div>
+        <div class="total highlight">
+          <span class="label">Preço Mínimo de Venda</span>
+          <strong id="precoMinimo" class="value">R$ 0,00</strong>
+        </div>
+        <div id="precoResultados" style="margin-top: 16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Configurações -->
+  <dialog id="modalSettings">
+    <h2>Configurações Globais</h2>
+    <div style="max-height: 60vh; overflow-y: auto;">
+      <h3>Alíquotas Simples Nacional</h3>
+      <div class="row">
+        <div>
+          <label for="modal_aliquotaIII">DAS Anexo III (%)</label>
+          <input type="text" id="modal_aliquotaIII" data-mask="percent">
+        </div>
+        <div>
+          <label for="modal_aliquotaV">DAS Anexo V (%)</label>
+          <input type="text" id="modal_aliquotaV" data-mask="percent">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="modal_limiarFatorR">Limiar Fator R (%)</label>
+          <input type="text" id="modal_limiarFatorR" data-mask="percent">
+        </div>
+      </div>
+      <hr style="border:0; border-top:1px solid var(--border); margin:20px 0">
+      <h3>Encargos CLT</h3>
+      <div class="row">
+        <div>
+          <label for="modal_fgts">FGTS (%)</label>
+          <input type="text" id="modal_fgts" data-mask="percent">
+        </div>
+        <div>
+          <label for="modal_fgtsMulta">Multa FGTS (%)</label>
+          <input type="text" id="modal_fgtsMulta" data-mask="percent">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="modal_decimoTerceiro">13º Salário (%)</label>
+          <input type="text" id="modal_decimoTerceiro" data-mask="percent">
+        </div>
+        <div>
+          <label for="modal_ferias">Férias+1/3 (%)</label>
+          <input type="text" id="modal_ferias" data-mask="percent">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="modal_inssPatronalProlabore">INSS Patronal (Prolabore) (%)</label>
+          <input type="text" id="modal_inssPatronalProlabore" data-mask="percent">
+        </div>
+        <div>
+          <label for="modal_inssPatronalCLT">INSS Patronal (CLT) (%)</label>
+          <input type="text" id="modal_inssPatronalCLT" data-mask="percent">
+        </div>
+      </div>
+      <hr style="border:0; border-top:1px solid var(--border); margin:20px 0">
+      <h3>Projeção financeira</h3>
+      <p class="note">O setup é recebido no mês de entrada. A mensalidade recorrente começa no mês seguinte. A receita de referência usa o mês selecionado.</p>
+      <div class="row">
+        <div>
+          <label for="modal_setupPorCliente">Setup por cliente (R$)</label>
+          <input type="text" id="modal_setupPorCliente" data-mask="currency">
+        </div>
+        <div>
+          <label for="modal_mensalidadeRecorrente">Mensalidade recorrente (R$)</label>
+          <input type="text" id="modal_mensalidadeRecorrente" data-mask="currency">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="modal_novosClientesMes">Novos clientes por mês</label>
+          <input type="number" min="0" step="1" id="modal_novosClientesMes">
+        </div>
+        <div>
+          <label for="modal_mesReferencia">Mês usado na receita atual</label>
+          <select id="modal_mesReferencia">
+            <option value="1">Mês 1</option>
+            <option value="2">Mês 2</option>
+            <option value="3">Mês 3</option>
+            <option value="4">Mês 4</option>
+            <option value="5">Mês 5</option>
+            <option value="6">Mês 6</option>
+            <option value="7">Mês 7</option>
+            <option value="8">Mês 8</option>
+            <option value="9">Mês 9</option>
+            <option value="10">Mês 10</option>
+            <option value="11">Mês 11</option>
+            <option value="12">Mês 12</option>
+          </select>
+        </div>
+      </div>
+      <label class="switch setting-toggle">
+        <input type="checkbox" id="modal_projecaoAtiva">
+        <span>Atualizar automaticamente o histórico com a projeção</span>
+      </label>
+      <hr style="border:0; border-top:1px solid var(--border); margin:20px 0">
+      <h3>Persistência local</h3>
+      <label class="switch setting-toggle">
+        <input type="checkbox" id="modal_autoSave">
+        <span>Salvar alterações automaticamente neste navegador</span>
+      </label>
+      <p class="footnote">O localStorage é local ao navegador e não substitui um backup JSON.</p>
+      <hr style="border:0; border-top:1px solid var(--border); margin:20px 0">
+      <h3>Retenções e ISS</h3>
+      <div class="row">
+        <div>
+          <label for="modal_iss">ISS (%)</label>
+          <input type="text" id="modal_iss" data-mask="percent">
+        </div>
+        <div>
+          <label for="modal_retencoes">Outras Retenções (%)</label>
+          <input type="text" id="modal_retencoes" data-mask="percent">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('modalSettings').close()">Cancelar</button>
+      <button class="btn primary" id="btnSaveModal">Salvar Tudo</button>
+    </div>
+  </dialog>
+
+  <!-- Scripts -->
+  <script type="module" src="js/main.js?v=4.2.1"></script>
+</body>
+
+</html>
