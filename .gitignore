@@ -1,0 +1,19 @@
+# Dependências e artefatos locais
+node_modules/
+coverage/
+.cache/
+
+# Arquivos temporários do sistema e editores
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Configurações e segredos locais
+.env
+.env.*
+!.env.example
+
+# Pacotes gerados; o ZIP de entrega fica fora do projeto
+*.zip
