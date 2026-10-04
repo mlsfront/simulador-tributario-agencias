@@ -1,237 +1,101 @@
-# 💼 Simulador Tributário para Agências Web
+# Simulador Tributário e de Custos para Agências Web
 
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+Aplicação web estática para simulação gerencial de receita, Fator R, Simples Nacional, pró-labore, funcionários CLT, prestadores CT e custos variáveis. A versão atual é **4.2.1** e centraliza os cálculos na arquitetura modular de `src/`.
 
-> **Calculadora tributária completa e personalizável para agências web brasileiras enquadradas no Simples Nacional (CNAE 6201-5/02)**
+> O simulador é um instrumento de apoio e transparência gerencial. Não substitui a apuração no PGDAS-D, a escrituração ou a validação de um profissional contábil.
 
-## 📋 Sobre o Projeto
+## Principais melhorias da série 4.2.x
 
-O **Simulador Tributário para Agências Web** é uma ferramenta desenvolvida para resolver um dos maiores desafios de agências digitais brasileiras: **precificação precisa e planejamento tributário eficiente**.
+### Correções de confiabilidade da versão 4.2.1
 
-### 🎯 Problema que Resolve
+A versão 4.2.1 corrige regressões do fluxo de receita e persistência. `RevenueProjection.resolve()` passou a definir a única base efetiva do RBT12 e do Fator R: projeção nova quando ativa ou histórico manual quando desativada. O Fator R, a interface e os exportadores consomem a mesma origem.
 
-Agências web enfrentam dificuldades para:
-- Calcular corretamente impostos sob o regime Simples Nacional
-- Entender a migração automática entre Anexo III e Anexo V baseada no Fator R
-- Precificar serviços considerando todos os custos (impostos, folha, encargos, variáveis)
-- Simular cenários com diferentes configurações de equipe e custos
-- Manter controle sobre a carga tributária efetiva
+A importação agora entende o envelope produzido pelo exportador JSON e preserva o estado completo, incluindo funcionários, contratos, custos, tabelas e configurações. A inclusão e edição de funcionários atualiza a folha e o Fator R através do estado central. A hidratação também trata flags booleanas textuais sem reativar recursos por engano, e a cobertura subiu para 12 testes de regressão.
 
-Este simulador oferece uma solução **100% personalizável**, permitindo que você ajuste alíquotas, tabelas progressivas e percentuais conforme a legislação vigente e suas necessidades específicas.
+A composição de contratos CT foi revisada para separar base contratual, ISS, demais retenções e custo total, eliminando a ambiguidade que sugeria dupla soma no card de despesas. O total de despesas usa o custo CT, já com seus tributos, uma única vez.
 
----
+O custo patronal adicional de pró-labore não é mais somado nos cenários de Anexos III e V, pois a aplicação trata a CPP como componente do DAS nesse escopo. O Anexo IV não é suportado. A aplicação também atualizou referências de INSS e IRPF para 2026, introduziu migração segura de estado, testes automatizados e atualização incremental dos gráficos.
 
-## ✨ Funcionalidades
+A versão 4.2.0 acrescenta um cronograma financeiro configurável para 12 meses. O usuário informa setup por cliente, mensalidade recorrente, novos clientes por mês e o mês usado como receita atual. O setup entra no mês de aquisição e a mensalidade começa no mês seguinte. O histórico manual permanece disponível e desativa a projeção automática quando editado.
 
-### 🧮 Cálculo Tributário Inteligente
+| Área | Implementação atual |
+| --- | --- |
+| Cálculos | Motor único `TaxCalculator`; projeção isolada em `RevenueProjection`; base efetiva resolvida uma única vez e protegida por testes. |
+| Entrada pública | `src/index.html`; `index.html` na raiz apenas redireciona para essa rota. |
+| Contratos CT | Base + ISS + outras retenções, contabilizados uma única vez no custo CT. |
+| IRPF | Tabela mensal de 2026, desconto simplificado e redução mensal configurados. |
+| Persistência | Hidratação, metadados e controles explícitos de salvar, carregar e limpar estado local. |
+| Projeção | Cronograma de setup, mensalidade e aquisição de clientes para o Ano 1. |
+| Gráficos | Instâncias reutilizadas, sem recriação a cada recálculo. |
+| Documentação | Índice e guias organizados em [`docs/`](docs/README.md). |
 
-- **Fator R Automático**: Calcula automaticamente o Fator R (massa salarial ÷ receita bruta) e determina o anexo aplicável (III ou V)
-- **Migração Automática III ↔ V**: Transição automática entre anexos baseada no limiar configurável do Fator R
-- **Dois Modos de Cálculo**:
-  - **Modo Básico**: Alíquotas fixas mensais para cálculo rápido
-  - **Modo Avançado**: Tabela progressiva completa com alíquota efetiva calculada automaticamente
+## Início rápido
 
-### 💰 Gestão Completa de Custos
+O projeto precisa ser servido por HTTP para carregar módulos ECMAScript.
 
-- **Pro-labore do Sócio**: 
-  - Cálculo de INSS (até o teto configurável)
-  - IRPF progressivo com tabela editável
-  - CPP (Contribuição Patronal Previdenciária) aplicada apenas no Anexo V
-  
-- **Funcionários CLT**:
-  - Adicionar múltiplos funcionários
-  - Encargos configuráveis: FGTS, Multa FGTS, 13º, Férias, INSS Patronal, RAT
-  - Provisões mensais automáticas
-  - Benefícios adicionais por funcionário
-
-- **Prestadores CT (PJ/Autônomos)**:
-  - Contratos de prestação de serviços
-  - ISS e retenções configuráveis
-  - Não computam na massa salarial (conforme legislação)
-
-- **Custos Variáveis**:
-  - Plugins, licenças, ferramentas SaaS
-  - Percentual automático sobre receita
-
-### 📊 Indicadores e Consolidação
-
-- **Carga Tributária Total**: DAS + INSS + IRPF + Encargos
-- **Custo de Operação**: Pessoas (sócios + CLT + CT)
-- **Total de Despesas**: Visão consolidada com valores absolutos e percentuais
-- **Histórico de 12 Meses**: Edição manual das receitas mensais para cálculo preciso do RBT12
-
-### 🎨 Interface e Usabilidade
-
-- **Design Moderno**: Interface dark mode com gradientes e micro-animações
-- **Máscaras Brasileiras**: Formatação automática de moeda (R$) e percentuais
-- **Edição em Tempo Real**: Todos os campos atualizam cálculos instantaneamente
-- **Responsivo**: Funciona perfeitamente em desktop, tablet e mobile
-
-### 💾 Persistência e Exportação
-
-- **LocalStorage**: Salva automaticamente seu estado (debounced)
-- **Exportar JSON**: Baixe seus dados para backup
-- **Importar JSON**: Restaure configurações salvas
-- **Desfazer**: Sistema de histórico com até 20 estados anteriores
-- **Configurações Globais**: Modal centralizado para editar todas as alíquotas de uma vez
-
----
-
-## 🚀 Como Usar
-
-### Instalação
-
-1. **Clone o repositório**:
-   ```bash
-   git clone https://github.com/mlsfront/simulador-tributario-agencias.git
-   cd simulador-tributario-agencias
-   ```
-
-2. **Abra o arquivo**:
-   ```bash
-   # Basta abrir o arquivo HTML em qualquer navegador moderno
-   open simulador.html
-   # ou
-   firefox simulador.html
-   # ou
-   google-chrome simulador.html
-   ```
-
-   **Não requer servidor web, Node.js ou dependências externas!**
-
-### Uso Básico
-
-1. **Configure sua receita mensal** no campo "Receita mensal (Mês Atual)"
-2. **Ajuste o histórico de 12 meses** clicando em "Ver/Editar Histórico de 12 Meses"
-3. **Configure o pro-labore** do sócio e os encargos aplicáveis
-4. **Adicione funcionários CLT** com salários e benefícios
-5. **Adicione contratos CT** (prestadores PJ)
-6. **Adicione custos variáveis** (ferramentas, licenças)
-7. **Visualize a consolidação** na seção "Consolidação e carga tributária"
-
-### Configurações Avançadas
-
-- **Modo Avançado Simples Nacional**: Ative para usar tabelas progressivas completas (Anexos III e V)
-- **Configurações Globais**: Clique em "⚙️ Configurações Globais" para editar todas as alíquotas centralizadamente
-- **Tabela IRPF**: Configure as faixas de Imposto de Renda Pessoa Física
-- **Exportar/Importar**: Faça backup dos seus dados em JSON
-
----
-
-## 🏛️ Entendendo o CNAE 6201-5/02 e o Fator R
-
-### O que é CNAE 6201-5/02?
-
-**CNAE 6201-5/02** refere-se a "Desenvolvimento de programas de computador sob encomenda" e é a classificação fiscal mais comum para agências web que desenvolvem sites, sistemas e aplicações customizadas.
-
-### Anexo III vs Anexo V
-
-Empresas neste CNAE podem ser tributadas por dois anexos diferentes do Simples Nacional:
-
-| Anexo | Alíquota Inicial | Quando se Aplica |
-|-------|------------------|------------------|
-| **Anexo III** | 6% | Fator R ≥ 28% (maior massa salarial) |
-| **Anexo V** | 15,5% | Fator R < 28% (menor massa salarial) |
-
-### Fator R: A Chave da Tributação
-
-O **Fator R** é calculado pela fórmula:
-
-```
-Fator R = (Massa Salarial 12 meses) ÷ (Receita Bruta Total 12 meses)
+```bash
+python3 -m http.server 8000
 ```
 
-**Massa Salarial inclui**:
-- Salários brutos (CLT)
-- Pró-labore dos sócios
-- 13º salário, férias, FGTS
-- INSS Patronal (CPP) sobre folha
-- **NÃO inclui**: Contratos CT (PJ), INSS retido do sócio (11%), IRPF
+Abra `http://localhost:8000/src/` no navegador. Para rodar as verificações automatizadas, use:
 
-### Por que a Flexibilidade é Importante?
-
-Este simulador permite **editar todas as alíquotas e tabelas** porque:
-
-1. **Legislação muda**: Alíquotas do Simples Nacional são atualizadas periodicamente
-2. **Teto INSS varia**: O teto da previdência é reajustado anualmente
-3. **Tabela IRPF muda**: Faixas de imposto de renda são corrigidas
-4. **Regimes especiais**: Algumas empresas têm CPP diferenciado (ex: Desoneração da folha)
-5. **Municípios diferentes**: ISS varia conforme a cidade
-
----
-
-## 📸 Screenshots / Demo
-
-> **[Adicione aqui capturas de tela do simulador]**
-
-_Placeholder para screenshots:_
-- Tela principal com cálculos
-- Modo avançado com tabelas progressivas
-- Modal de configurações globais
-- Seção de indicadores consolidados
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-- **HTML5**: Estrutura semântica
-- **CSS3**: Design moderno com variáveis CSS, gradientes e animações
-- **JavaScript Vanilla**: Lógica de cálculo, máscaras e persistência (sem frameworks)
-- **LocalStorage API**: Persistência de dados no navegador
-- **Intl.NumberFormat**: Formatação de moeda e percentuais conforme padrão brasileiro
-
----
-
-## 📦 Estrutura do Projeto
-
-```
-simulador-tributario-agencias/
-│
-├── simulador.html          # Arquivo único standalone (HTML + CSS + JS)
-├── README.md               # Este arquivo
-├── LICENSE                 # Licença MIT
-├── CONTRIBUTING.md         # Guia de contribuição
-└── ROADMAP.md             # Melhorias futuras planejadas
+```bash
+npm test
 ```
 
----
+## Estrutura do projeto
 
-## 🤝 Contribuindo
+```text
+.
+├── src/
+│   ├── index.html                 # Interface modular canônica
+│   ├── css/                       # Estilos da aplicação
+│   └── js/
+│       ├── main.js                # Eventos, UI e gráficos
+│       ├── models/
+│       │   ├── State.js           # Estado, persistência e migração
+│       │   ├── TaxCalculator.js   # Motor único de fórmulas tributárias e custos
+│       │   ├── RevenueProjection.js # Projeção de receita de 12 meses
+│       │   └── PricingCalculator.js
+│       └── utils/
+│           ├── exporters.js       # Exportação JSON, CSV e HTML
+│           └── formatters.js      # Parsing e formatação
+├── tests/
+│   └── tax-calculator.test.js     # Testes de regressão
+├── docs/                          # Documentação técnica e de auditoria
+├── index.html                     # Redirecionamento à versão canônica
+├── legacy/                        # Materiais históricos e depreciados
+├── .gitignore                     # Higiene do repositório e artefatos locais
+└── package.json                   # Comandos de teste
+```
 
-Contribuições são muito bem-vindas! Veja o arquivo [CONTRIBUTING.md](CONTRIBUTING.md) para detalhes sobre como contribuir.
+## Regra de fonte única
 
----
+Existe uma única implementação ativa das fórmulas tributárias e de custos: `src/js/models/TaxCalculator.js`. A projeção financeira possui um módulo próprio (`src/js/models/RevenueProjection.js`) porque é uma regra de receita independente, mas não replica o motor tributário. `RevenueProjection.resolve()` é a única resolução de base de receita e retorna origem `projecao` ou `manual` para RBT12, Fator R, interface e exportações. `State.js` apenas gerencia estado, migração e persistência; `main.js` coordena a interface; `PricingCalculator.js` trata exclusivamente o preço de venda.
 
-## 📄 Licença
+A página `src/index.html` é a única interface ativa. O `index.html` da raiz é um redirecionamento mínimo de compatibilidade, não uma segunda implementação. Não devem ser criados novos arquivos HTML ou calculadoras paralelas fora dessa divisão.
 
-Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](LICENSE) para detalhes.
+## Git e pacotes de entrega
 
----
+A cópia recebida não contém um diretório `.git`, portanto não há histórico local a preservar no ZIP atual. O `.gitignore` foi incluído para impedir que dependências, segredos, caches e pacotes gerados sejam incorporados acidentalmente. Quando o projeto for versionado, os commits devem acompanhar código, testes e documentação, usando as sugestões em [`docs/MENSAGEM-DE-COMMIT.md`](docs/MENSAGEM-DE-COMMIT.md).
 
-## 👨‍💻 Autor
+## Documentação
 
-**MLSFront**
+O ponto inicial recomendado para onboarding e manutenção é [`CONTEXTO_PROJETO.md`](CONTEXTO_PROJETO.md), na raiz. A documentação detalhada está em [`docs/README.md`](docs/README.md). Os documentos principais são:
 
----
+| Documento | Conteúdo |
+| --- | --- |
+| [Modelo de cálculos](docs/MODELO-DE-CALCULOS.md) | Fórmulas, convenções e reconciliação de CT. |
+| [Auditoria técnica e de cálculos](docs/AUDITORIA-2026-08.md) | Achados, impacto, correções, evidências e limites. |
+| [Operação e validação](docs/OPERACAO-E-VALIDACAO.md) | Execução local, testes e atualização de parâmetros. |
+| [Validação no navegador](docs/validacao-navegador.md) | Evidências de conferência funcional. |
+| [Guia de contribuição](docs/CONTRIBUICAO.md) | Padrões de manutenção, testes e documentação. |
+| [Projeção e persistência](docs/PROJECAO-E-PERSISTENCIA.md) | Fontes do Fator R, cronograma, histórico manual e importação/exportação. |
 
-## ⭐ Agradecimentos
+## Escopo e atualizações necessárias
 
-- Comunidade de desenvolvedores brasileiros
-- Contadores e especialistas tributários que vão ajudar a validar os cálculos
-- Agências web que vão testar e fornecer feedback
+A aplicação cobre os Anexos III e V em cenário de agência web. Enquadramento, Fator R, ISS, retenções, folha e tabelas tributárias dependem da realidade da empresa, da competência e do município. Antes de utilizar qualquer resultado, revise os parâmetros e consulte as referências oficiais e a assessoria contábil. Documentos preservados de versões anteriores estão em [`legacy/`](legacy/README.md) e não devem orientar alterações no código ativo.
 
----
+## Licença
 
-## 📞 Suporte
-
-Se você encontrou um bug ou tem uma sugestão, por favor:
-1. Verifique se já não existe uma [issue aberta](https://github.com/mlsfront/simulador-tributario-agencias/issues)
-2. Crie uma nova issue com detalhes claros
-3. Ou envie um Pull Request com a correção!
-
----
-
-**⚠️ Aviso Legal**: Este simulador é uma ferramenta de apoio à gestão. Sempre consulte um contador para validar cálculos tributários e tomar decisões fiscais.
+Consulte [LICENSE](LICENSE).
